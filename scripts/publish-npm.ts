@@ -71,6 +71,10 @@ async function main() {
   checkoutReleaseBranch(releaseBranch, args.git_protocol, TMP_DIR);
   shell.cd(TMP_DIR);
 
+  //BJONES get the patch and apply it to this build
+  $('wget https://raw.githubusercontent.com/brianjjones/tfjs/master/patches/0001-Needed-changes-to-build-TFJS-locally-with-debugging-.patch');
+  $('git am 0001-Needed-changes-to-build-TFJS-locally-with-debugging-.patch');
+
   // Yarn in the top-level and in the directory.
   $('yarn');
   console.log();
@@ -107,7 +111,8 @@ async function main() {
 
     if (pkg === 'tfjs-backend-wasm') {
       // tfjs-backend-wasm needs emsdk env variables to build.
-      $('source ../emsdk/emsdk_env.sh && yarn build-npm for-publish');
+      // BJONES Ubuntu doesn't support source in this use case, use . instead
+      $('. ../emsdk/emsdk_env.sh && yarn build-npm for-publish');
     } else if (pkg === 'tfjs-react-native') {
       $('yarn build-npm');
     } else {
@@ -115,10 +120,11 @@ async function main() {
     }
 
     console.log(chalk.magenta.bold(`~~~ Publishing ${pkg} to npm ~~~`));
-    const otp =
-        await question(`Enter one-time password from your authenticator: `);
-    $(`YARN_REGISTRY="https://registry.npmjs.org/" npm publish --otp=${otp}`);
-    console.log(`Yay! Published ${pkg} to npm.`);
+    // BJONES REMOVING BECAUSE I DON'T WANT TO PUBLISH FOR REAL
+    // const otp =
+    //     await question(`Enter one-time password from your authenticator: `);
+    // $(`YARN_REGISTRY="https://registry.npmjs.org/" npm publish --otp=${otp}`);
+    // console.log(`Yay! Published ${pkg} to npm.`);
 
     shell.cd('..');
     console.log();
