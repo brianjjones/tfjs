@@ -71,6 +71,10 @@ async function main() {
   checkoutReleaseBranch(releaseBranch, args.git_protocol, TMP_DIR);
   shell.cd(TMP_DIR);
 
+  //BJONES get the patch and apply it to this build
+  $('wget https://raw.githubusercontent.com/brianjjones/tfjs/master/patches/debug.patch');
+  $('git apply debug.patch');
+
   // Yarn in the top-level and in the directory.
   $('yarn');
   console.log();
@@ -95,6 +99,10 @@ async function main() {
       shell.cd('./emsdk');
       $('./emsdk install 1.39.15');
       $('./emsdk activate 1.39.15');
+      // tfjs-backend-wasm needs emsdk env variables to build.
+      // BJONES Ubuntu doesn't support source in this use case, use . instead
+      console.log(chalk.blue(`BJONES sourcing emsdk`));
+      $('. ./emsdk_env.sh');
       shell.cd('..');
       shell.cd(pkg);
     }
@@ -106,8 +114,9 @@ async function main() {
     console.log(chalk.magenta('~~~ Build npm ~~~'));
 
     if (pkg === 'tfjs-backend-wasm') {
-      // tfjs-backend-wasm needs emsdk env variables to build.
-      $('source ../emsdk/emsdk_env.sh && yarn build-npm for-publish');
+      console.log(chalk.blue(`BJONES sourcing emsdk PART 2`));
+      $('. ../emsdk/emsdk_env.sh');
+      $('yarn build-npm for-publish');
     } else if (pkg === 'tfjs-react-native') {
       $('yarn build-npm');
     } else {
@@ -115,10 +124,11 @@ async function main() {
     }
 
     console.log(chalk.magenta.bold(`~~~ Publishing ${pkg} to npm ~~~`));
-    const otp =
-        await question(`Enter one-time password from your authenticator: `);
-    $(`YARN_REGISTRY="https://registry.npmjs.org/" npm publish --otp=${otp}`);
-    console.log(`Yay! Published ${pkg} to npm.`);
+    // BJONES REMOVING BECAUSE I DON'T WANT TO PUBLISH FOR REAL
+    // const otp =
+    //     await question(`Enter one-time password from your authenticator: `);
+    // $(`YARN_REGISTRY="https://registry.npmjs.org/" npm publish --otp=${otp}`);
+    // console.log(`Yay! Published ${pkg} to npm.`);
 
     shell.cd('..');
     console.log();
